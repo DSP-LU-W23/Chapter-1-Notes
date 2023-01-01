@@ -1,0 +1,176 @@
+---
+title: "Guided Notes 1.3: Advanced Data Visualization"
+author: "Your Name"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE, fig.height = 4, fig.width = 6)
+```
+
+
+## Advanced Data Graphics
+
+Let's take a look at some graphics that go beyond the basics. We'll recreate two graphics that orignally appeared in a fivethirtyeight.com blogpost [How to tell Someone's Age when All You Know is Her Name](https://fivethirtyeight.com/features/how-to-tell-someones-age-when-all-you-know-is-her-name/)  
+
+This example is heavily based on one from Section 3.3 of [Modern Data Science with R](https://beanumber.github.io/mdsr2e/), by Baumer, Kaplan, and Horton. It has been modified slightly. 
+
+```{r}
+library(tidyverse)
+library(babynames)
+library(mdsr)
+```
+
+### Babynames dataset 
+
+```{r}
+Babynames_data <- make_babynames_dist()
+head(Babynames_data)
+```
+
+The data are broken down by gender (M, F). The following step produces a dataset with all babies of a given name, regardless of gender. 
+
+We'll talk more about the commands being used soon, but for now, you can just run the code and use the resulting dataset. 
+
+```{r}
+Babynames_data2 <- Babynames_data %>% group_by(year, name) %>% summarize(n=sum(n), alive_prob=mean(alive_prob), age_today=mean(age_today)) %>% mutate(est_alive_today = round(n*alive_prob,0), count_thousands = n/1000)
+head(Babynames_data2)
+```
+
+### Example 1.3.1: Age Distribution for a Given Name  
+
+### Choosing Name 
+
+```{r}
+Babyname <- Babynames_data2 %>% filter(name == "Joseph")
+
+name_plot <- ggplot(data=Babyname, aes(x=year)) + 
+  geom_bar(aes(y=est_alive_today/1000), fill="#b2d7e9", color="white", stat="identity")
+name_plot
+```
+
+See the [R Cookbook](http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/) for more information on color palette. 
+
+### Setting Axis Limits 
+
+```{r}
+name_plot <- name_plot + ylim(c(0,42))
+name_plot
+```
+
+### Adding Line  
+
+```{r}
+name_plot <- name_plot + geom_line(aes(y=count_thousands), size=2)
+name_plot
+```
+
+### Axis Labels 
+
+```{r}
+name_plot <- name_plot + 
+  xlab("Year") + ylab("Number of people (in thousands)")
+name_plot
+```
+
+### Adding Text 
+
+```{r}
+name_plot <- name_plot + 
+  ggtitle("Age Distribution of Americans Named Joseph") + 
+  geom_text(x=1935, y=40, label="Number of Josephs\nborn each year") +
+  geom_text(x=1915, y=13, label="Number of Josephs \nborn each year\nestimated to be alive on \n 1/1/2014", color="#b2d7e9") 
+name_plot
+```
+
+
+### Adding Median Age  
+
+```{r}
+#install.packages("Hmisc")
+
+library(Hmisc)
+#wtd.quantile <- Hmisc::wtd.quantile
+median_yob <- with(Babyname, wtd.quantile(year, est_alive_today, probs=0.5))
+median_yob
+```
+
+```{r}
+name_plot <- name_plot + 
+  geom_bar(stat="identity", color="white", fill="#008fd5", aes(y = ifelse(year==median_yob, est_alive_today / 1000 , 0)))
+name_plot
+```
+
+```{r}
+name_plot <- name_plot + 
+  geom_text(x=2003, y=40, label="The median \nliving Joseph \nis 37 years old", color="darkgray") + 
+  geom_curve(x=1995, xend=1974, y=40, yend=24, arrow=arrow(length=unit(0.3, "cm")), curvature=0.5) 
+name_plot
+```
+
+### Example 1.3.2: Common Female Names  
+
+### Some data prep  
+
+```{r}
+common_names <- Babynames_data %>%
+  # hack added in 2nd edition
+  filter(n > 100) %>%
+  filter(sex == "F") %>% 
+  group_by(name) %>%
+  mutate(wgt = est_alive_today / sum(est_alive_today)) %>%
+  summarise(
+    N = n(), est_num_alive = sum(est_alive_today),
+    q1_age = wtd.quantile(age_today, est_alive_today, probs = 0.25, na.rm = TRUE),
+    median_age = wtd.quantile(age_today, est_alive_today, probs = 0.5, na.rm = TRUE),
+    q3_age = wtd.quantile(age_today, est_alive_today, probs = 0.75, na.rm = TRUE)
+  ) %>%
+  arrange(desc(est_num_alive)) %>%
+  head(25)
+```
+
+### Setup the Plot  
+
+We put the names along the x-axis in decreasing order of median age.
+
+```{r}
+w_plot <- ggplot(data = common_names, 
+                 aes(x = reorder(name, -median_age), 
+  y = median_age)) + 
+  xlab(NULL) + ylab("Age (in years)") + 
+  ggtitle("Median ages for females with the 25 most common names")
+w_plot
+```
+
+### Add Linerange and color  
+
+```{r}
+w_plot <- w_plot + 
+  geom_linerange(aes(ymin = q1_age, ymax = q3_age), 
+  color = "#f3d478", size = 10, alpha = 0.8)
+w_plot
+```
+
+### Add points at median  
+
+```{r}
+w_plot <- w_plot +
+  geom_point(fill = "#ed3324", colour = "white", size = 4, shape = 21)
+w_plot
+```
+
+### Add Labels and Flip Coordinates  
+
+```{r, fig.height=7, fig.width=7}  
+w_plot <- w_plot + 
+  geom_point(aes(y = 55, x = 24), fill = "#ed3324", colour = "white", 
+    size = 4, shape = 21) + 
+  geom_text(aes(y = 58, x = 24, label = "median")) + 
+  geom_text(aes(y = 26, x = 16, label = "25th")) + 
+  geom_text(aes(y = 51, x = 16, label = "75th percentile")) + 
+  geom_point(aes(y = 24, x = 16), shape = 17) + 
+  geom_point(aes(y = 56, x = 16), shape = 17) +
+  coord_flip()  
+w_plot
+```

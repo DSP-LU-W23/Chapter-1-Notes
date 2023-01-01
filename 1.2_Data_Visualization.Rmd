@@ -1,0 +1,227 @@
+---
+title: "Guided Notes 1.2: Data Visualization"
+author: "Your Name"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE, fig.height = 4, fig.width = 6)
+```
+
+These notes correspond to material from Chapter 3 of R for [Data Science](https://r4ds.had.co.nz) by Wickham and Grolemund.
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+movies <- read_csv("https://raw.githubusercontent.com/AndrewjSage/andrewjsage.github.io/master/Datasets/movies2018.csv")
+```
+
+
+
+## More Graphics 
+
+### Visualizing Quantitative Data (Continued)
+
+#### Example 1.2.1: Faceting 
+
+`facet_wrap()` allows us to display a graph in multiple panels. You should only facet on categorical variables. 
+
+```{r}
+ggplot(data = movies) + 
+  geom_point(mapping = aes(x = run_time, y = IMDB_score, color=MPAA_rating, size=gross)) +
+  facet_wrap(~ genre, nrow = 2) +
+  xlab("Runtime (in minutes)")+
+  ylab("IMDB Score (out of 10)")
+```
+
+`facet_grid()` allows us to display a graph using a grid of categorical variables.  
+
+```{r, fig.width=10}
+ggplot(data = movies) + 
+  geom_point(mapping = aes(x = run_time, y = IMDB_score, size=gross)) +
+  facet_grid( MPAA_rating ~ genre) +
+  xlab("Runtime (in minutes)")+
+  ylab("IMDB Score (out of 10)")
+```
+
+
+#### Example 1.2.2: Histograms
+
+Histograms are useful for visualizing a quantitative variable.
+
+```{r}
+ggplot(data = movies) + 
+  geom_histogram(mapping = aes(x = run_time), color="white", fill="blue" ) + 
+  xlab("Run time (in minutes")
+```
+
+
+#### Example 1.2.3: Boxplots
+
+Boxplots can be used to graph a single quantitative variable alone, or plotted against a categorical variable.
+
+`coordflip()` flips the x and y axes. 
+
+```{r}
+ggplot(data = movies, mapping = aes(x = MPAA_rating, y = run_time)) + 
+  geom_boxplot() + xlab("MPAA Rating") + ylab("Run time (in minutes)") + 
+  coord_flip()
+```
+
+#### Practice 1.2.4
+
+Fill in the blanks to create a histogram to visualize IMDB scores. 
+
+```{r, eval=FALSE}
+ggplot(data = _________) + 
+  geom_histogram(mapping = aes(x = _________), color="white", fill="blue" ) + 
+  xlab("_____________")
+```
+
+#### Practice 1.2.5
+
+Use faceting to display the histogram of scores for each genre separately. 
+
+```{r, eval=FALSE}
+ggplot(data = _________) + 
+  geom_histogram(mapping = aes(x = _________), color="white", fill="blue" ) +
+  xlab("____________") + 
+  facet_wrap(~_______, nrow=2) 
+```
+
+#### Practice 1.2.6
+
+Fill in the blanks to create a boxplot to visualize IMDB scores by genre. 
+
+```{r, eval=FALSE}
+ggplot(data = movies, mapping = aes(x = ___________, y = ___________)) + 
+  geom_boxplot() + xlab("____________") + ylab("_______________") +
+  coord_flip()
+```
+
+### Visualizing Categorical Data
+
+#### Example 1.2.7: Bar Graph
+
+Bar graphs are used to display frequencies for categorical variables. 
+
+```{r}
+ggplot(data = movies) + 
+  stat_count(mapping = aes(x = genre), fill="blue") + 
+  xlab("MPAA Rating")
+```
+
+#### Example 1.2.8 Reordering Bars 
+
+Notice that, by default, R orders the bars alphabetically. We might wish to specify a different order, perhaps using decreasing bar height. 
+
+The `fct_infreq` command automatically orders factor variables according to frequency. See [this link](https://forcats.tidyverse.org/reference/fct_inorder.html) for more ordering options.  
+
+```{r}
+ggplot(data = movies) + 
+  stat_count(mapping = aes(x = fct_infreq(genre)), fill="blue") + 
+  xlab("MPAA Rating")
+```
+
+
+#### Example 1.2.9 Relative Frequency Bar Graph
+
+```{r}
+ggplot(data = movies) + 
+  stat_count(mapping = aes(x = genre, y = ..prop.., group = 1), fill="blue") + 
+  xlab("MPAA Rating")
+```
+
+#### Practice 1.2.10
+
+Fill in the blanks to create a bar graph displaying the number of films with each MPAA rating
+
+```{r, eval=FALSE}
+ggplot(data = ___________) + 
+  stat_count(mapping = aes(x = ____________), fill="blue") + 
+  xlab("_____________")
+```
+
+
+#### Practice 1.2.11
+
+Copy/paste your code from above and modify it to display the bars in descending order of heights. 
+
+```{r}
+# type code here
+```
+
+#### Practice 1.2.12
+
+Copy/paste your code from above and modify it to display proportions, rather than counts on the y-axis. 
+
+```{r}
+# type code here
+```
+
+
+#### Example 1.2.13 Stacked Bar Graph
+
+A stacked bar graph allows us to display information about two or more categorical variables. 
+
+```{r}
+ggplot(data = movies) + 
+  stat_count(mapping = aes(x = genre, fill=MPAA_rating) ) + 
+  xlab("Genre")
+```
+
+#### Example 1.2.14 Stacked Bar Graph with Equal Heights
+
+When comparing percentages, it is useful to have bars of the same height. We can do this using `position="fill"`. 
+
+```{r, fig.width=10}
+ggplot(data = movies) + 
+  stat_count(mapping = aes(x = genre, fill=MPAA_rating), position="fill" ) + 
+  xlab("Genre")
+```
+
+
+#### Example 1.2.15 Side-by-Side Bar Graph
+
+Sometimes it is helpful to have side-by-side bars of different heights. This is done using `position="dodge"`.
+
+```{r, fig.width=10}
+ggplot(data = movies) + 
+  stat_count(mapping = aes(x = genre, fill=MPAA_rating), position="dodge" ) + 
+  xlab("Genre")
+```
+
+#### Example 1.2.16 Height Specified by Variable
+
+Let's narrow down our dataset to the 5 most popular films, using the `filter()` command. 
+
+```{r, fig.width=10}
+movies_subset <- movies %>% filter(title %in% c("Black Panther", "Avengers: Infinity War", "Incredibles 2", "Jurassic World: Fallen Kingdom", "Aquaman"))
+```
+
+Let's create a bar graph that displays the number of IMDB users who rated each of these films (i.e. that `vote`) variable. Now, the height of the bars is given by variable in the dataset, rather than the number of occurances of a factor variable. We use the `stat=identity` command to tell R that the bar height is determined by the y-variable, rather than freqency. 
+
+```{r, fig.width=10}
+ggplot(data=movies_subset) +
+  geom_bar(mapping=aes(x=title, y=vote), stat = "identity", fill="blue") + 
+  xlab("Title") + ylab("Votes")
+```
+
+We can use `fct_reorder()` to reorder the bars by decreasing height. See [link](https://forcats.tidyverse.org/reference/fct_reorder.html) for more. 
+
+```{r, fig.width=10}
+ggplot(data=movies_subset) +
+  geom_bar(mapping=aes(x=fct_reorder(.f=title, .x=vote, .desc=TRUE), y=vote), stat = "identity", fill="blue") +
+  xlab("Title") + ylab("Votes")
+```
+
+#### Practice 1.2.17 Height Specified by Variable
+
+Copy/paste the code from Example 1.3.10 and modify it to display the 5 movies' gross revenue (`gross`) on the y-axis. Arrange in descending order. 
+
+```{r}
+# type code here
+```
+

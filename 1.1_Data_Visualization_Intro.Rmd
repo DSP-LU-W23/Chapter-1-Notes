@@ -1,0 +1,124 @@
+---
+title: "Guided Notes 1.1: Introduction to Data Visualization"
+author: "Your Name"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE, fig.height = 4, fig.width = 6)
+```
+
+These notes correspond to material from Chapter 3 of R for [Data Science](https://r4ds.had.co.nz) by Wickham and Grolemund.
+
+
+## Loading and Exploring Data
+
+#### Loading Data and R packages
+
+We'll load an R package called `tidyverse`. This is a poweful R package that is useful for creating graphics, and wrangling data, and many other tasks.  
+
+If the package is not already installed, you will need to install it, using the instructions in Assignment 0. Once installed, we load the package using the `library()` command. You will need to do this everytime you start a new R session and want to use the package. 
+
+```{r}
+library(tidyverse)
+```
+
+We will work with a dataset containing information on movies released in 2018. Data were collected from https://www.imdb.com/. 
+
+We first read in the data from my github repository, where it is posted, and assign it the name "movies"
+
+```{r}
+movies <- read_csv("https://raw.githubusercontent.com/AndrewjSage/andrewjsage.github.io/master/Datasets/movies2018.csv")
+```
+
+#### Exploring the Data
+
+The `head()` command displays the first 6 rows of the dataset
+
+```{r}
+head(movies)
+```
+
+The `glimpse()` command returns a summary of the information contained in the dataset, including variable types. 
+
+```{r}
+glimpse(movies)
+```
+
+* Categorical variables take on groups or categories, rather than numeric values. In R, these might be coded as logical `<logi>`, character `<chr>`, factor `<fct>` and ordered factor `<ord>`.  
+
+
+* Quantitative variables take on meaningful numeric values. These include numeric `<num>`, integer `<int>`, and double `<dbl>`.   
+
+The `summary()` command returns a summary of each variable in the dataset
+
+```{r}
+summary(movies)
+```
+
+##  Creating Graphics 
+
+The `ggplot` command is used to create graphics in `tidyverse`. 
+
+### Example 1.1.1 Basic Scatterplot
+
+We create a scatterplot of IMDB score vs. runtime for 2018 movies. 
+
+```{r}
+ggplot(data = movies) + 
+  geom_point(mapping = aes(x = run_time, y = IMDB_score))
+```
+
+### Example 1.1.2 Scatterplot with text labels
+
+Out of curiousity, let's add the names of the films that scores especially high or low. 
+
+We'll see the `filter` command more later on. 
+
+```{r, fig.height=6}
+ggplot(data = movies) + 
+  geom_point(mapping = aes(x = run_time, y = IMDB_score)) +
+  geom_text(data=movies %>% filter(IMDB_score > 8 | IMDB_score < 4 ), 
+            aes(x = run_time, y = IMDB_score, label = title, vjust=-1), 
+            size = 2, color="red")
+```
+
+### Example 1.1.3 Scatterplot with color, shape, and size
+
+
+We can use color, shape, and size to convey information about other variables. 
+
+We'll use color for genre, shape for MPAA rating, and size for gross revenue generated.
+
+Note that shape should be used for factor variables, and size for numeric variables. Color may be used for either. 
+
+```{r}
+ggplot(data = movies) + 
+  geom_point(mapping = aes(x = run_time, y = IMDB_score, 
+                           color=genre, shape=MPAA_rating, size=gross))
+```
+
+
+### Example 1.1.4 Changing Axis Labels and Hiding Legend
+
+```{r}
+ggplot(data = movies) + 
+  geom_point(mapping = aes(x = run_time, y = IMDB_score, 
+                           color=genre, shape=MPAA_rating, size=gross)) +
+  xlab("Runtime (in minutes)")+ ylab("IMDB Score (out of 10)")
+```
+
+#### Practice 1.1.5 
+
+Fill in the blanks to create a scatterplot that shows IMDB score on the y-axis and critics score (`meta_score`) on the x-axis. Use color to denote MPAA_rating, and size to represent the number of votes on IMDB (`vote`). Add appropriate axis lables. 
+
+When you are done, remove `eval=FALSE` from the braces in the chunk heading, so your code will run. 
+
+```{r, eval=FALSE}
+ggplot(data = ___________) + 
+  geom_point(mapping = aes(x = ____________, y = ___________, 
+                           color=__________, size=________)) +
+  xlab("_____________")+ylab("__________")
+```
+
+
