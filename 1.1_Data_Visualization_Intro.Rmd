@@ -1,6 +1,6 @@
 ---
 title: "Guided Notes 1.1: Introduction to Data Visualization"
-author: "Your Name "
+author: "Your Name"
 output: pdf_document
 ---
 
