@@ -71,7 +71,7 @@ ggplot(data = movies) +
 
 ### Example 1.1.2 Scatterplot with text labels
 
-Out of curiousity, let's add the names of the films that scores especially high or low. 
+Out of curiosity, let's add the names of the films that scores especially high or low. 
 
 We'll see the `filter` command more later on. 
 
@@ -99,7 +99,7 @@ ggplot(data = movies) +
 ```
 
 
-### Example 1.1.4 Changing Axis Labels and Hiding Legend
+### Example 1.1.4 Changing Axis Labels 
 
 ```{r}
 ggplot(data = movies) + 
